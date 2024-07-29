@@ -8,7 +8,16 @@ GITREPOS is a Python script designed to automate the management of repository cr
 
 ## Contents of GITREPOS repository
 
-- **gitrepos.py**: The main Python script for creating, configuring, or removing repositories.
+- **gitrepos.py**: The main Python script for running all other scripts in order, ensuring dependencies are met and repositories are managed.
+- **scripts/dependencies.py**: Checks and installs required dependencies.
+- **scripts/clone_repos.py**: Clones repositories based on a configuration file.
+- **scripts/repo_management.py**: Manages the creation, configuration, and deletion of repositories.
+- **scripts/config.py**: Handles configuration file operations.
+- **scripts/git_utils.py**: Utility functions for Git operations.
+- **scripts/github_utils.py**: Utility functions for GitHub operations.
+- **scripts/gitlab_utils.py**: Utility functions for GitLab operations.
+- **scripts/prompts.py**: Handles user input prompts.
+- **scripts/utils.py**: General utility functions.
 - **gitPushMirror.sh**: A Bash script to synchronize commits across mirrored repositories using `git push`.
 - **requirements.txt**: Lists all dependencies required to run the scripts.
 - **container.config.json**: Sample configuration file for global settings related to your repositories.
@@ -17,7 +26,7 @@ GITREPOS is a Python script designed to automate the management of repository cr
 ## Prerequisites
 The first time you run the script it will ask for all the variables it does not find and generate the `.config.json` file both in the container and locally.
 
-- Python 2.5 or newer.
+- Python 3.6 or newer.
 - Git 2.39 or newer.
 - Ensure that Git Bash is installed if running on Windows for script execution.
 
@@ -33,11 +42,11 @@ The first time you run the script it will ask for all the variables it does not 
 
 ## How to run
 
-:warning: **You must be installed Python 2.5 or newer and GIT 2.39 or newer on your local system** :warning:
+:warning: **You must have Python 3.6 or newer and GIT 2.39 or newer installed on your local system** :warning:
 
 ### 1. First of all, you must create a container directory where all repositories will be stored
 
-Ex: my container configuration
+Example: my container configuration
 
 - gitlab (container)
   - gitrepos (repo1)
@@ -53,8 +62,7 @@ Ex: my container configuration
 
 ### 3. Install all requirements
 
-- Python 2.5: `pip install -r requirements.txt`
-- Python 3: `pip3 install -r requirements.txt`
+- Python: `pip install -r requirements.txt`
 
 ### 4. Configure the Remote Repositories
 
@@ -64,12 +72,9 @@ Ex: my container configuration
 ```sh
 git remote add github https://github.com/yourUser/yourRepo.git
 ```
-
 ### 5. :exclamation: Important steps :exclamation: Edit the container.config.json file and change the file name to '.config.json'
 
-- This file contains all necessary global variables for execute the script. You must change all values for your own data.
-
-Example:
+This file contains all necessary global variables to execute the script. You must change all values for your own data.
 
 ~~~json
 {
@@ -85,13 +90,11 @@ Example:
 }
 ~~~
 
-- When you finish edit It is important rename the file to '.config.json' and move to your container git directory
+> :pencil: When you finish editing, it is important to rename the file to '.config.json' and move it to your container git directory.
 
-### 6. :exclamation: Important steps :exclamation: Edit the local.config.json file and change the file name to '.config.json'
+### :exclamation: Important steps :exclamation: Edit the local.config.json file and change the file name to '.config.json'
 
-This file contains all necessary local repo variables for execute the script. You must change all values for your own data.
-
-Ex:
+This file contains all necessary local repo variables to execute the script. You must change all values for your own data.
 
 ~~~json
 {
@@ -108,31 +111,32 @@ Ex:
 }
 ~~~
 
-When you finish edit It is important rename the file to '.config.json'. Keep it in repo
+> :pencil: When you finish editing, it is important to rename the file to '.config.json'. Keep it in the repo.
 
 ### 7. Execute script
 
-- Python 2.5 `python gitrepos.py`
-- Python 3 `python3 gitrepos.py`
+~~~sh
+python gitrepos.py
+~~~
 
-### 8. Now you can use that repository and you can execute `git add` and `git commit -m ""` normally
+### 8. Now you can use that repository and you can execute git add and git commit -m "" normally
 
-### 9. :warning: But when you execute git push it is neccesary you run the gitPushMirror.sh
+### 9. :warning: But when you execute git push it is necessary to run the gitPushMirror.sh
 
-   ~~~sh
-   sh gitPushMirror.sh
-   ~~~
+~~~sh
+sh gitPushMirror.sh
+~~~
 
-### Example of execution
+## Example of execution
 
 1. Run gitrepos.py
 
-~~~bash
+~~~sh
 'COMMAND'
 $ python {your_path}/gitrepos.py
 
 'OUTPUT'
-Do you want remove or create new repo? r/c: c
+Do you want to remove or create a new repo? r/c: c
 Enter the repo name: testRepo
 [SUCCESS - CHECK CONTAINER CONFIG] gitlab\.config.json loaded successfully
 [SUCCESS - LOCAL CREATED] \gitlab\testRepo created successfully
@@ -145,20 +149,20 @@ Enter the repo visibility: (public/private)
 [SUCCESS - GITHUB CREATED] testRepo created successfully
 [CHECK] Go to https://api.github.com/repos/NuriaLiano/testRepo to check it!
 [SUCCESS - README CREATED] \gitlab\testRepo/README.md created successfully
-[SUCCESS - README COMMITED] \gitlab\testRepo/README.md commited successfully
+[SUCCESS - README COMMITED] \gitlab\testRepo/README.md committed successfully
 [SUCCESS - README PUSHED] Push with upstream master
 [SUCCESS - MIRROR SET UP] https://github.com/NuriaLiano/testRepo set up successfully
 ~~~
 
 2. Add data and files
 
-~~~bash
+~~~sh
 touch README.md
 ~~~
 
 3. Git add and git commit
-  
-~~~bash
+
+~~~sh
 'COMMAND'
 $ git add README.md
 $ git commit -m "update Readme"
@@ -166,7 +170,6 @@ $ git commit -m "update Readme"
 'OUTPUT'
 [master 0933f14] update Readme
  1 file changed, 47 insertions(+)
-
 ~~~
 
 4. Git push mirror
@@ -198,56 +201,61 @@ Everything up-to-date
 
 5. (Optional) Remove repository
 
-~~~bash
+~~~sh
 'COMMAND'
 $ python {your_path}/gitrepos.py
 
 'OUTPUT'
-Do you want remove or create new repo? r/c: r
+Do you want to remove or create a new repo? r/c: r
 Enter the repo name: testRepo
 Are you sure you want to delete the repository? y/n: y
 [SUCCESS - GITHUB DELETE] https://api.github.com/repos/NuriaLiano/testRepo deleted successfully
 [SUCCESS - GITLAB DELETED] testRepo in GITLAB has been deleted
 [SUCCESS - LOCAL DELETED] \gitlab\testRepo has been deleted
 ~~~
-  
-## How generate mirror
 
-The `set_up_gitlab_github_mirror` function is responsible for setting up a mirror between a GitLab repository and a GitHub repository. Here's the step-by-step of how it does this setup:
+## How to generate a mirror
+
+The set_up_gitlab_github_mirror function is responsible for setting up a mirror between a GitLab repository and a GitHub repository. Here's the step-by-step of how it does this setup:
 
 - **Gets the necessary variables**: the function starts by getting the paths to the directories and files needed for the mirror setup. It uses the create_path function to create the paths to the local directories and the configuration file local_path_config. In addition, it gets the URLs of the GitLab and GitHub repositories, as well as the GitHub access token, from the container_path_config configuration file.
 - **Add the GitHub repository as a remote**: Use the gitpython library to add the GitHub repository as a remote named "github" to the local GitLab repository. This is accomplished with the line gitlabRepo.create_remote('github', gh_repo_url). This way, the local GitLab repository is configured to push changes to the GitHub repository via the remote "github".
 - **Configure the mirror in GitLab**: Use the Git command line tool to configure the mirror between the GitLab repository and the GitHub repository. This is done through the following lines of code:
 
-    ~~~py
-    gitlabRepo.git.remote('set-url', '--push', 'github', gh_repo_url)
-    gitlabRepo.git.remote('set-url', '--push', '--add', 'github', gl_repo_url)
-    ~~~
+~~~py
+gitlabRepo.git.remote('set-url', '--push', 'github', gh_repo_url)
+gitlabRepo.git.remote('set-url', '--push', '--add', 'github', gl_repo_url)
+~~~
 
-    These lines set the push URLs for the remote "github" so that changes made to the local GitLab repository are automatically pushed to the GitHub repository. gh_repo_url represents the URL of the GitHub repository and gl_repo_url represents the URL of the GitLab repository.
-- **Synchronise changes**: The function gets the name of the active branch in the local GitLab repository by default_branch = gitlabRepo.active_branch.name. It then performs a pull operation from the GitLab repository to get the most recent changes to the active branch, using the line gitlabRepo.remotes.origin.pull(default_branch). It then performs a push operation on the "github" remote to push the changes to the GitHub repository, using the GitHub access token for authentication:
+These lines set the push URLs for the remote "github" so that changes made to the local GitLab repository are automatically pushed to the GitHub repository. gh_repo_url represents the URL of the GitHub repository and gl_repo_url represents the URL of the GitLab repository.
 
-    ~~~py
-    gitlabRepo.git.push('--all', 'github', **{'o': f'oauth2accesstoken:{gh_token}'})
-    ~~~
+- **Synchronize changes**: The function gets the name of the active branch in the local GitLab repository by default_branch = gitlabRepo.active_branch.name. It then performs a pull operation from the GitLab repository to get the most recent changes to the active branch, using the line gitlabRepo.remotes.origin.pull(default_branch). It then performs a push operation on the "github" remote to push the changes to the GitHub repository, using the GitHub access token for authentication:
+
+~~~sh
+gitlabRepo.git.push('--all', 'github', **{'o': f'oauth2accesstoken:{gh_token}'})
+~~~
 
 ## Errors and suggestions
 
-If you find a problem with the code or have implemented an improvement please open an issue.
+If you find a problem with the code or have implemented an improvement, please open an issue.
 
-## TODOs
+> :warning: Windows Users
+> When running the gitPushMirror.sh script, you might need to set the script as executable using Git Bash
 
-- [x] generate .gitingore for ignore .config.json
-- [ ] add to README how add gitPushMirror.sh to $PATH on Windows and Linux
-- [ ] gitPushBot: script that checks for changes in the repo every X minutes and execute gitPushMirror.sh automatically.
+## TODO
+
+- [x] generate .gitignore to ignore .config.json
+- [x] add remote 
+- [x] check dependencies
+- [ ] gitPushBot: script that checks for changes in the repo every X minutes and executes gitPushMirror.sh automatically.ç
 
 ## License
 
-All content in this repository is licensed under a [Creative Commons Attribution-NonCommercial 4.0 International Public License](./LICENSE)
+All content in this repository is licensed under a [Creative Commons Attribution-NonCommercial 4.0 International Public License](https://gitlab.com/skilly-academy/gitrepos/-/blob/master/LICENSE)
 
 ## Contact
 
-You can write to me at <hola@nurialiano.es>
+You can write to me at hola@nurialiano.es
 
 Visit my profiles or my website
 
@@ -263,5 +271,4 @@ Visit my profiles or my website
 
 ---
 
-Desarrollado en [Cantabria](https://www.cantabria.es/)💢 con mucho 🤘 y 🍺
-
+Desarrollado en [cantabria](https://www.cantabria.es)💢 con mucho 🤘 y 🍺
