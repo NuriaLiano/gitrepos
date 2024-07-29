@@ -1,4 +1,32 @@
-import sys, gitlab, os, git, shutil, json, datetime, requests, subprocess, github
+import sys
+import os
+import subprocess
+
+def check_dependencies():
+    # Verificar si Python está instalado
+    if not sys.version_info >= (3, 6):
+        print("Python 3.6 or higher is required.")
+        sys.exit(1)
+
+    # Verificar si pip está instalado
+    try:
+        import pip
+    except ImportError:
+        print("pip is not installed. Please install pip and try again.")
+        sys.exit(1)
+
+    # Verificar e instalar las dependencias
+    required_packages = ['python-gitlab', 'gitpython', 'PyGithub']
+    for package in required_packages:
+        try:
+            __import__(package.replace("-", "_"))
+        except ImportError:
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
+
+# Llamar a la función check_dependencies al inicio del script
+check_dependencies()
+
+import gitlab, git, shutil, json, datetime, requests, github
 
 #initialize colorama
 from colorama import init, Fore, Back, Style
