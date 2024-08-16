@@ -1,7 +1,9 @@
-from colorama import init, Fore
+import os
+import json
 import subprocess
-
-from config import open_config_data
+from colorama import init, Fore
+import git
+import gitlab
 
 init(autoreset=True)
 
@@ -12,12 +14,132 @@ def get_gitConfig(config_key):
         return result.stdout.strip()
     else:
         return None
+    
+def load_main_vars():
+    # make main path .config file
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    main_path = os.path.join(current_path, "..", ".config.json")
+    #normalize path
+    main_path = os.path.normpath(main_path)
 
-def check_container_data(container_path_config):
-    config_data = open_config_data(container_path_config)
-    required_keys = ['EMAIL', 'GL_USERNAME', 'GL_TOKEN', 'GL_URL', 'GH_USERNAME', 'GH_TOKEN', 'GH_URL', 'GH_URL_REMOVE']
-    if all(key in config_data for key in required_keys):
-        print(Fore.GREEN + f'[SUCCESS - CHECK CONTAINER CONFIG] {container_path_config} loaded successfully')
-        return True
+    # open  files
+    with open(main_path, "r") as main_config_file:
+        config_data = json.load(main_config_file)
+    
+    with open ("data/initial_repos.json", "r") as initial_repos_file:
+        repos_data = json.load(initial_repos_file)
+    
+    #generate dictionary
+    return {
+        "config": config_data,
+        "repos": repos_data
+    }
+
+def prompt_gitlab_vars():
+    gl_url = "https://gitlab.com"
+    gl_username = input(Fore.CYAN +'Enter your GITLAB username: ')
+    gl_token = input(Fore.CYAN +'Enter your GITLAB token: ')
+    gl_org = input(Fore.CYAN +'Enter your GITLAB organization name: ')
+    return gl_url, gl_username, gl_token, gl_org
+
+def prompt_github_vars():
+    gh_url = "https://api.github.com/user/repos"
+    gh_url_general = "https://github.com/"
+    gh_api_url = "https://api.github.com/repos/"
+    gh_username = input(Fore.CYAN +'Enter your GITHUB username: ')
+    gh_token = input(Fore.CYAN +'Enter your GITHUB token: ')
+    gh_org = input(Fore.CYAN +'Enter your GITHUB organization name: ')
+    return gh_url, gh_url_general, gh_api_url, gh_username, gh_token, gh_org
+
+def open_gitlab_instance(gl_url, gl_token):
+    return gitlab.Gitlab(gl_url, private_token=gl_token)
+
+def get_gitlab_id_repo(instance, repo_name):
+    try:
+        all_projects = instance.projects.list(search=repo_name, owned=True)
+        for repo in all_projects:
+            return repo.id
+    except gitlab.exceptions.GitlabGetError as e:
+        print(Fore.RED + f'[ERROR] Gitlab API error: {e}')
+
+def set_visibility():
+    print(Fore.CYAN + 'Press enter for public visibility')
+    visibility_prompt = input(Fore.CYAN + 'Enter the repo visibility: (public/private)').lower()
+    if visibility_prompt in ["", "public", "pub"]:
+        return 'public'
+    elif visibility_prompt in ["private", "pri"]:
+        return 'private'
     else:
+        print(Fore.RED + f'[ERROR] {visibility_prompt} is not a valid option')
+        return 'public'
+
+def check_exists_gitlab_repo(instance, repo_name):
+    try:
+        all_projects = instance.projects.list(search=repo_name, owned=True)
+        for repo in all_projects:
+            return True
+    except gitlab.exceptions.GitlabGetError as e:
+        print(Fore.RED + f'[ERROR] Gitlab API error: {e}')
         return False
+
+def createGitIgnore(local_path):
+    try:
+        gitignore_path = os.path.join(local_path, '.gitignore')
+        with open(gitignore_path, 'w') as data_file:
+            data_file.write('**/.config*\n')
+            data_file.write('**/.config.json\n')
+        print(Fore.GREEN + f'[SUCCESS - GITIGNORE CREATED] {gitignore_path} created successfully')
+        return gitignore_path
+    except IOError as e:
+        print(Fore.RED + f'[ERROR] {e}')
+
+def createReadme(local_path, repo_name):
+    try:
+        readme_path = os.path.join(local_path, 'README.md')
+        with open(readme_path, 'w') as data_file:
+            data_file.write('# ' + repo_name.upper())
+        print(Fore.GREEN + f'[SUCCESS - README CREATED] {readme_path} created successfully')
+    except IOError as e:
+        print(Fore.RED + f'[ERROR] {e}')
+
+def setRemote(local_path, github_url):
+    try:
+        repo = git.Repo(local_path)
+        origin = repo.remote(name="origin")
+        origin.fetch()
+        print(Fore.GREEN + f'[SUCCESS - REMOTE SET] {origin.url} set successfully')
+
+        #verify is github remote exists
+        if "github" in repo.remotes:
+            github_remote = repo.remote(name="github")
+            github_remote.set_url(github_url)
+            print(Fore.GREEN + f'[SUCCESS - REMOTE SET] {github_url} set successfully')
+        else:
+            github_remote = repo.create_remote("github", url=github_url)
+            print(Fore.GREEN + f'[SUCCESS - REMOTE SET] {github_url} set successfully')
+    except Exception as e:
+        print(Fore.RED + f'[ERROR] GIT SET REMOTE Failed to perform Git operation {e}')
+
+def gitCommit(local_path):
+    commitMessage = "[COMMIT AUTO GENERATED BY GITREPOS]"
+    try:
+        repo = git.Repo(local_path)
+        repo.git.add(A=True)
+        repo.index.commit(commitMessage)
+        print(Fore.GREEN + f'[SUCCESS - COMMITED] committed successfully')
+    except Exception as e:
+        print(Fore.RED + f'[ERROR] GIT COMMIT Failed to perform Git operation {e}')
+
+def gitPushMirror(local_path):
+    #change to repo path
+    os.chdir(local_path)
+    try: 
+        #git push 
+        repo = git.Repo(local_path)
+        #push
+        repo.remote(name="origin").push()
+        repo.remote(name="github").push()
+
+        print(Fore.GREEN + f'[SUCCESS - PUSHED] pushed successfully')
+    except Exception as e:
+        print(Fore.RED + f'[ERROR] GIT PUSH Failed to perform Git operation {e}')

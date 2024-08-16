@@ -4,11 +4,7 @@ from colorama import init, Fore
 
 init(autoreset=True)
 
-def load_container_vars():
-    container_path_repo = os.path.dirname(os.getcwd())
-    container_path_repo_config = os.path.join(container_path_repo, '.config.json')
-    return container_path_repo, container_path_repo_config
-
+## this part is for local repo .config file
 def create_config_file(config_path):
     with open(config_path, 'w') as data_file:
         json.dump({}, data_file, indent=4)

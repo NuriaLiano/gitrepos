@@ -1,0 +1,27 @@
+{
+    "gitrepos":{
+        "github": "git@github.com:skilly-academy/gitrepos.git",
+        "gitlab": "git@gitlab.com:Nuria_Liano/gitrepos.git",
+        "org": false
+    },
+    "books-and-references":{
+        "github": "git@github.com:NuriaLiano/books-and-references.git",
+        "gitlab": "git@gitlab.com:nuriagliano/books-and-references.git",
+        "org": false
+    },
+    "nurivault":{
+        "github": "git@github.com:NuriaLiano/nurivault.git",
+        "gitlab": "git@gitlab.com:Nuria_Liano/nurivault.git",
+        "org": false
+    },
+    "cursos":{
+        "github": "git@github.com:skilly-academy/cursos.git",
+        "gitlab": "git@gitlab.com:skilly-academy/cursos.git",
+        "org": true
+    },
+    "students":{
+        "github": "git@github.com:skilly-academy/students.git",
+        "gitlab": "git@gitlab.com:skilly-academy/students.git",
+        "org": true
+    }
+}

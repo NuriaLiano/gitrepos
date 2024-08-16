@@ -12,28 +12,22 @@ def check_and_install_python_and_pip():
         print(Fore.RED + f'[ERROR] Python 3.6 or higher is required.')
         sys.exit(1)
     
-    # Verificar si pip está instalado
+    # check if Pip is installed
     try:
         import pip
     except ImportError:
         print(Fore.MAGENTA + f" [WARNING] pip is not installed. Attempting to install pip...")
-        subprocess.check_call([sys.executable, '-m', 'ensurepip', '--default-pip'])
+        subprocess.check_call([sys.executable, '-m', 'ensurepip', '--default-pip'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    # Actualizar pip a la última versión
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
+    # upgrade pip
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def install_required_packages(packages):
+    installed = True
     for package in packages:
         try:
             __import__(package.replace("-", "_"))
         except ImportError:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
-
-if __name__ == "__main__":
-    # 1. Comprobar e instalar Python y pip
-    check_and_install_python_and_pip()
-
-    # 2. Instalar los paquetes necesarios
-    required_packages = ['python-gitlab', 'gitpython', 'PyGithub']
-    install_required_packages(required_packages)
-
+            installed = False
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', package], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return installed
