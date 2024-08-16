@@ -1,3 +1,3 @@
 #!/bin/bash
 git push origin master
-git push github mastersss
+git push github master
